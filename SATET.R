@@ -3,6 +3,9 @@ source("~/SPA_functions.R")
 
 ################ MAIN FUNCTION ###################
 
+#### NOTE: If not case-control study design, need only single Gmat
+#### NOTE: domain_snp_dt can be modified to incorporate weights
+
 SATET <- function(Gmat_case,Gmat_ctrl,
                   domain_snp_dt,
                   agg_snps=FALSE,
@@ -120,6 +123,8 @@ SATET <- function(Gmat_case,Gmat_ctrl,
     
     #Leaf attribute matrix
     leaf_mat_all <- create_leaf_attribute(mat_all,struct_map)
+    
+    #### Note: Can add different test statistics HERE based on application
     
     #Calculate test statistics
     if(teststat=="FET"){
@@ -353,6 +358,8 @@ SATET <- function(Gmat_case,Gmat_ctrl,
     
   }
   
+  #### NOTE: Output are the indices of the layer 1 leaves (S.list) or the indices of the domains (S.list.dc)
+  #### NOTE: LayerSumm in the output saves all the important quantities used for the multiple-testing procedure
   
   return(list("params"=in.params,
               "p.hats"=p.hats,
