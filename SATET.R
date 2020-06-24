@@ -121,27 +121,24 @@ SATET <- function(Gmat_case,Gmat_ctrl,
     }
     
     
-    #Leaf attribute matrix
-    leaf_mat_all <- create_leaf_attribute(mat_all,struct_map)
-    
-    #### Note: Can add different test statistics HERE based on application
     
     #Calculate test statistics
     if(teststat=="FET"){
       #For FET statistic
       
-      leaf_mat_all@x <- ifelse(leaf_mat_all@x>0,1,0) #binarize
-      
-      case_colSums = Matrix::colSums(leaf_mat_all[1:N1,])
-      all_colSums = Matrix::colSums(leaf_mat_all)
+      case_QV_counts = struct_map[, .(case_count= uniqueN(ID[Sample.Type == "case"])), by=.(L1)]$case_count
+      rowmargin_QV_counts = aggregate(ID~L1,struct_map,uniqueN)$ID
       
       pvals.1 <- calcFETpval_per_leaf(N1=N1,N0=N0,
-                                      case_colSums = case_colSums,
-                                      all_colSums = all_colSums,
+                                      case_colSums = case_QV_counts,
+                                      all_colSums = rowmargin_QV_counts,
                                       midp=midp)
       
     } else{
       #For score statistic
+      
+      #Leaf attribute matrix
+      leaf_mat_all <- create_leaf_attribute(mat_all,struct_map)
       
       if(!is.null(glm_input) && ncol(glm_input)>1){
         #With covariates
@@ -358,8 +355,6 @@ SATET <- function(Gmat_case,Gmat_ctrl,
     
   }
   
-  #### NOTE: Output are the indices of the layer 1 leaves (S.list) or the indices of the domains (S.list.dc)
-  #### NOTE: LayerSumm in the output saves all the important quantities used for the multiple-testing procedure
   
   return(list("params"=in.params,
               "p.hats"=p.hats,
@@ -482,29 +477,29 @@ SATET_rank <- function(Gmat_case,Gmat_ctrl,
         data.table()
     }
     
-    #Leaf attribute matrix
-    leaf_mat_all <- create_leaf_attribute(mat_all,struct_map)
+    
     
     #Calculate test statistics
     if(teststat=="FET"){
       #For FET statistic
       
-      leaf_mat_all@x <- ifelse(leaf_mat_all@x>0,1,0) #binarize
-      
-      case_colSums = Matrix::colSums(leaf_mat_all[1:N1,])
-      all_colSums = Matrix::colSums(leaf_mat_all)
+      case_QV_counts = struct_map[, .(case_count= uniqueN(ID[Sample.Type == "case"])), by=.(L1)]$case_count
+      rowmargin_QV_counts = aggregate(ID~L1,struct_map,uniqueN)$ID
       
       pvals.1 <- calcFETpval_per_leaf(N1=N1,N0=N0,
-                                      case_colSums = case_colSums,
-                                      all_colSums = all_colSums,
+                                      case_colSums = case_QV_counts,
+                                      all_colSums = rowmargin_QV_counts,
                                       midp=midp)
       
-      signs.FET.1 <- ifelse(case_colSums > all_colSums-case_colSums,1,-1)
+      signs.FET.1 <- ifelse(case_QV_counts > rowmargin_QV_counts-case_QV_counts,1,-1)
       
       signed.pvals.1 <- signs.FET.1*pvals.1
       
     } else{
       #For score statistic
+      
+      #Leaf attribute matrix
+      leaf_mat_all <- create_leaf_attribute(mat_all,struct_map)
       
       if(!is.null(glm_input) && ncol(glm_input)>1){
         #With covariates
@@ -751,6 +746,7 @@ SATET_rank <- function(Gmat_case,Gmat_ctrl,
               "S.list.dc"= S.list.dc,
               "LayerSumm"=LayerSumm))
 }
+
 
 ### Simulation functions - each SNP is a leaf
 
